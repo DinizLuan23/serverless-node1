@@ -1,0 +1,38 @@
+org: dhionyxp
+app: aws-node-http-api-project
+service: aws-node-http-api-project
+frameworkVersion: '3'
+
+params:
+  default:
+    dbName: alura-serverless
+  dev:
+    connectionString: mongodb://localhost:27017/${self:params.default.dbName}
+  prod:
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  environment:
+    MONGODB_CONNECTIONSTRING: ${param:connectionString}
+    MONGODB_DB_NAME: ${param:dbName}
+
+functions:
+  sendResponse:
+    handler: api/index.sendResponse
+    events:
+      - httpApi:
+          path: /api/results
+          method: post
+          request:
+            schemas:
+              application/json: ${file(./schemas/sendResponse.json)}
+  getResults:
+    handler: api/index.getResult
+    events:
+      - httpApi:
+          path: /api/results/{id}
+          method: get
+
+plugins:
+  - serverless-offline
