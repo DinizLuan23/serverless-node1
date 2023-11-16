@@ -1,10 +1,15 @@
 const { MongoClient, ObjectId } = require("mongodb");
 const bcrypt = require("bcrypt");
 
+let connectionInstance = null;
+
 async function connectToDatabase(){
+  if(connectionInstance) return connectionInstance;
+
   const client = new MongoClient(process.env.MONGODB_CONNECTIONSTRING);
   const connection = await client.connect();
-  return connection.db(process.env.MONGODB_DB_NAME);
+  connectionInstance = connection.db(process.env.MONGODB_DB_NAME);
+  return connectionInstance;
 }
 
 async function basicAuth(event){
@@ -27,16 +32,15 @@ async function basicAuth(event){
 
   const [username, password] = String(Buffer.from(credentials, 'base64')).split(':');
 
-  const hashedPass = bcrypt.hash(password, process.env.SALT);
-
   const client = await connectToDatabase();
   const collection = await client.collection('users');
   const user = await collection.findOne({
-    name: username,
-    password: hashedPass
+    name: username
   });
 
-  if(!user){
+  const isPassValid = user ? await bcrypt.compare(password, user.password) : false;
+
+  if(!user || !isPassValid){
     return {
       statusCode: 401,
       body: JSON.stringify({ error: 'Invalid Credentials' })

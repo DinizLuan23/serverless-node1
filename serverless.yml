@@ -8,7 +8,7 @@ params:
     dbName: alura-serverless
   dev:
     connectionString: mongodb://localhost:27017/${self:params.default.dbName}
-    salt: ncy2fURLZw27gJ47uiAP3bcmNSnSqwBb
+    salt: 10
   prod:
 
 provider:
